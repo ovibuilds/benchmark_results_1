@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Local AI for WordPress Development Benchmark</title>
+  <style>
+    :root {
+      --bg: #f5f2ec;
+      --ink: #16191d;
+      --muted: #5d6673;
+      --line: #d7d2c8;
+      --panel: #fffdf8;
+      --green: #0d8b57;
+      --blue: #276fbf;
+      --amber: #b96900;
+      --red: #b3261e;
+      --shadow: 0 18px 55px rgba(34, 28, 20, .12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 16px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(255,253,248,.96);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+    }
+    .topbar-inner {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 12px 28px;
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand {
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+    nav a {
+      color: var(--ink);
+      text-decoration: none;
+      border: 1px solid var(--line);
+      background: #f3eee5;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    nav a:hover { background: #e8e1d6; }
+    .hero {
+      padding: 34px 28px 28px;
+      background: #20242a;
+      color: white;
+      border-bottom: 1px solid #343a42;
+    }
+    .hero-inner { max-width: 1220px; margin: 0 auto; }
+    h1 {
+      margin: 0 0 18px;
+      font-size: 46px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+    .subtitle {
+      max-width: 820px;
+      font-size: 19px;
+      color: rgba(255,255,255,.86);
+      margin: 0 0 22px;
+    }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; max-width: 980px; }
+    .stat {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.24);
+      padding: 18px;
+      backdrop-filter: blur(10px);
+    }
+    .stat strong { display: block; font-size: 30px; line-height: 1.1; }
+    .stat span { color: rgba(255,255,255,.72); }
+    main { max-width: 1220px; margin: 0 auto; padding: 48px 28px 80px; }
+    section { scroll-margin-top: 86px; }
+    section { margin: 0 0 54px; }
+    h2 { font-size: 34px; margin: 0 0 16px; letter-spacing: 0; }
+    h3 { margin: 0 0 8px; font-size: 18px; }
+    .lead { color: var(--muted); font-size: 18px; max-width: 900px; }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+    .verdict {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 24px;
+      align-items: start;
+    }
+    .callout {
+      border-left: 6px solid var(--blue);
+      background: #eef5fc;
+      padding: 18px 20px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .bar-row { display: grid; grid-template-columns: 210px 1fr 70px; gap: 14px; align-items: center; margin: 12px 0; }
+    .bar-label { font-weight: 700; }
+    .bar-track { height: 18px; background: #e7e2d9; border-radius: 99px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 99px; }
+    .excellent { background: var(--green); }
+    .good { background: var(--blue); }
+    .warn { background: var(--amber); }
+    .bad { background: var(--red); }
+    .bar-value { text-align: right; font-variant-numeric: tabular-nums; }
+    table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); }
+    th, td { padding: 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { font-size: 14px; color: #374151; background: #eee9df; }
+    td.score strong { display: block; font-size: 20px; color: white; }
+    td.score span { color: rgba(255,255,255,.84); font-size: 13px; }
+    td.score.excellent, td.score.good, td.score.warn, td.score.bad { color: white; }
+    td.score.excellent { background: var(--green); }
+    td.score.good { background: var(--blue); }
+    td.score.warn { background: var(--amber); }
+    td.score.bad { background: var(--red); }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .model-note, .prompt-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 20px;
+    }
+    .param-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 14px;
+      margin: 12px 0 22px;
+      padding: 0;
+      list-style: none;
+    }
+    .param-list li {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      background: #f3eee5;
+      border: 1px solid var(--line);
+      padding: 9px 10px;
+      border-radius: 6px;
+      min-width: 0;
+    }
+    .param-list code {
+      font-weight: 800;
+      color: #26313d;
+      white-space: nowrap;
+    }
+    .param-list span {
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+    .model-params {
+      margin: 12px 0 0;
+      padding-left: 18px;
+    }
+    .model-params li { margin: 8px 0; }
+    .model-note ul, .checks ul { margin: 10px 0 0; padding-left: 18px; }
+    .model-note li, .checks li { margin: 6px 0; }
+    code, pre { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+    pre {
+      background: #20242a;
+      color: #f7f1e7;
+      padding: 18px;
+      overflow: auto;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .prompt-card p { color: var(--muted); margin: 0; }
+    .footer { color: var(--muted); font-size: 14px; }
+    @media (max-width: 900px) {
+      .topbar { position: static; }
+      .topbar-inner { align-items: flex-start; flex-direction: column; }
+      nav { justify-content: flex-start; }
+      .hero { padding: 28px 24px; }
+      h1 { font-size: 34px; }
+      .subtitle { font-size: 19px; }
+      .stats, .verdict, .grid { grid-template-columns: 1fr; }
+      .bar-row { grid-template-columns: 1fr; gap: 6px; }
+      .param-list { grid-template-columns: 1fr; }
+      table { display: block; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">WP Local AI Benchmark</div>
+      <nav aria-label="Report sections">
+        <a href="#prompts">Prompts</a>
+        <a href="#setup">Setup</a>
+        <a href="#leaderboard">Leaderboard</a>
+        <a href="#matrix">Matrix</a>
+        <a href="#runtime">Runtime</a>
+        <a href="#notes">Notes</a>
+        <a href="#answer">Answer</a>
+        <a href="#interpretation">Interpretation</a>
+      </nav>
+    </div>
+  </div>
+  <header class="hero">
+    <div class="hero-inner">
+      <h1>Local AI for WordPress Development</h1>
+      <p class="subtitle">Five GGUF models, one RTX 5090, one little-coder agent, and a WordPress-focused benchmark suite.</p>
+      <div class="stats">
+        <div class="stat"><strong>5</strong><span>local models</span></div>
+        <div class="stat"><strong>5</strong><span>WP tasks</span></div>
+        <div class="stat"><strong>91.2%</strong><span>overall automated score</span></div>
+        <div class="stat"><strong>Gemma 4 26B A4B Q6</strong><span>top automated score</span></div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="prompts">
+      <h2>Prompt Suite</h2>
+      <p class="lead">The benchmark starts with five small but realistic WordPress development tasks. Each model receives the same prompt wrapper, expected files, and WordPress coding skill.</p>
+      <div class="grid"><article class="prompt-card"><h3>Secure Shortcode</h3><p>Create a WordPress plugin named Bench Secure CTA. It should register a [bench_secure_cta] shortcode that accepts text and url attributes, sanitizes shortcode attributes, escapes all rendered output, and returns an accessible call-to-action link wrapped in a div. Include a proper plugin header.</p></article>
+<article class="prompt-card"><h3>Settings Page</h3><p>Create a WordPress plugin named Bench Settings Guard. Add an admin settings page under Settings. The page should save a single option bench_settings_guard_message. Use capability checks, register_setting, sanitize_text_field, settings_fields, do_settings_sections, submit_button, and nonces through the Settings API. Render saved values safely.</p></article>
+<article class="prompt-card"><h3>REST Endpoint</h3><p>Create a WordPress plugin named Bench REST Notes. Register a REST route /bench/v1/notes that supports GET and POST. GET should return the saved option bench_rest_notes. POST should require manage_options, sanitize a note field from the JSON body, update the option, and return the saved value. Include explicit permission_callback functions and safe output.</p></article>
+<article class="prompt-card"><h3>WooCommerce</h3><p>Create a WordPress plugin named Bench Woo Member Discount. It should apply a 10 percent discount to displayed WooCommerce product prices for logged-in users with the customer role. Use WooCommerce price filters, avoid changing admin screens, avoid mutating prices for guests, and keep numeric formatting safe.</p></article>
+<article class="prompt-card"><h3>Dynamic Block</h3><p>Create a minimal dynamic Gutenberg block plugin named Bench Latest Posts Block. Include block metadata and registration code. The block should render a list of the three latest posts on the frontend using WP_Query, reset post data, and escape post titles and URLs.</p></article></div>
+    </section>
+
+    <section class="panel checks" id="setup">
+      <h2>Benchmark Setup</h2>
+      <p>The agent was <strong>little-coder</strong> using local <strong>llama.cpp</strong> models through <code>llama-server</code>.</p>
+      
+    <p><strong>Shared llama-server params</strong></p>
+    <ul class="param-list"><li><code>--host</code><span>127.0.0.1</span></li>
+<li><code>--port</code><span>8888</span></li>
+<li><code>--jinja</code></li>
+<li><code>--flash-attn</code><span>on</span></li>
+<li><code>--ctx-size</code><span>16384</span></li>
+<li><code>--parallel</code><span>1</span></li>
+<li><code>--threads</code><span>16</span></li>
+<li><code>--threads-batch</code><span>16</span></li>
+<li><code>--batch-size</code><span>2048</span></li>
+<li><code>--ubatch-size</code><span>512</span></li>
+<li><code>--cache-prompt</code></li>
+<li><code>--metrics</code></li>
+<li><code>--slots</code></li>
+<li><code>--timeout</code><span>900</span></li>
+<li><code>--fit</code><span>on</span></li>
+<li><code>--fit-target</code><span>1536</span></li>
+<li><code>--reasoning</code><span>auto</span></li></ul>
+    <p><strong>Per-model overrides</strong></p>
+    <ul class="model-params"><li><strong>qwen3-coder-next-q4</strong>: <span><code>--alias</code> qwen3-coder-next · <code>--n-gpu-layers</code> all · <code>--n-cpu-moe</code> 999</span></li>
+<li><strong>qwen3.6-35b-a3b-q4</strong>: <span><code>--alias</code> qwen3.6-35b-a3b · <code>--n-gpu-layers</code> all · <code>--n-cpu-moe</code> 999</span></li>
+<li><strong>qwen3.6-27b-q6</strong>: <span><code>--alias</code> qwen3.6-27b-q6 · <code>--n-gpu-layers</code> all</span></li>
+<li><strong>gemma-4-31b-q6</strong>: <span><code>--alias</code> gemma-4-31b · <code>--n-gpu-layers</code> all</span></li>
+<li><strong>gemma-4-26b-a4b-q6</strong>: <span><code>--alias</code> gemma-4-26b-a4b · <code>--n-gpu-layers</code> all · <code>--n-cpu-moe</code> 999</span></li></ul>
+    
+    </section>
+
+    <section class="panel" id="leaderboard">
+      <h2>Leaderboard</h2>
+      
+        <div class="bar-row">
+          <div class="bar-label">Gemma 4 26B A4B Q6</div>
+          <div class="bar-track"><div class="bar-fill excellent" style="width:96.67%"></div></div>
+          <div class="bar-value">96.7%</div>
+        </div>
+        
+
+        <div class="bar-row">
+          <div class="bar-label">Gemma 4 31B Q6</div>
+          <div class="bar-track"><div class="bar-fill good" style="width:94.45%"></div></div>
+          <div class="bar-value">94.4%</div>
+        </div>
+        
+
+        <div class="bar-row">
+          <div class="bar-label">Qwen3.6 27B Q6</div>
+          <div class="bar-track"><div class="bar-fill good" style="width:92.50%"></div></div>
+          <div class="bar-value">92.5%</div>
+        </div>
+        
+
+        <div class="bar-row">
+          <div class="bar-label">Qwen3 Coder Next Q4</div>
+          <div class="bar-track"><div class="bar-fill good" style="width:88.00%"></div></div>
+          <div class="bar-value">88.0%</div>
+        </div>
+        
+
+        <div class="bar-row">
+          <div class="bar-label">Qwen3.6 35B A3B Q4</div>
+          <div class="bar-track"><div class="bar-fill warn" style="width:84.17%"></div></div>
+          <div class="bar-value">84.2%</div>
+        </div>
+        
+    </section>
+
+    <section id="matrix">
+      <h2>Task Matrix</h2>
+      <table>
+        <thead>
+          <tr><th>Model</th><th>Secure Shortcode</th><th>Settings Page</th><th>REST Endpoint</th><th>WooCommerce</th><th>Dynamic Block</th></tr>
+        </thead>
+        <tbody><tr><th>Gemma 4 26B A4B Q6</th><td class="score excellent" title="Passed all checks"><strong>100.0%</strong><span>9/9 checks</span></td><td class="score excellent" title="Passed all checks"><strong>100.0%</strong><span>10/10 checks</span></td><td class="score good" title="no public POST permission"><strong>91.7%</strong><span>11/12 checks</span></td><td class="score excellent" title="Passed all checks"><strong>100.0%</strong><span>8/8 checks</span></td><td class="score good" title="render callback/file"><strong>91.7%</strong><span>11/12 checks</span></td></tr><tr><th>Gemma 4 31B Q6</th><td class="score good" title="url sanitized"><strong>88.9%</strong><span>8/9 checks</span></td><td class="score excellent" title="Passed all checks"><strong>100.0%</strong><span>10/10 checks</span></td><td class="score good" title="POST method"><strong>91.7%</strong><span>11/12 checks</span></td><td class="score excellent" title="Passed all checks"><strong>100.0%</strong><span>8/8 checks</span></td><td class="score good" title="render callback/file"><strong>91.7%</strong><span>11/12 checks</span></td></tr><tr><th>Qwen3.6 27B Q6</th><td class="score excellent" title="Passed all checks"><strong>100.0%</strong><span>9/9 checks</span></td><td class="score excellent" title="Passed all checks"><strong>100.0%</strong><span>10/10 checks</span></td><td class="score good" title="no public POST permission"><strong>91.7%</strong><span>11/12 checks</span></td><td class="score good" title="ten percent math"><strong>87.5%</strong><span>7/8 checks</span></td><td class="score warn" title="block name; render callback/file"><strong>83.3%</strong><span>10/12 checks</span></td></tr><tr><th>Qwen3 Coder Next Q4</th><td class="score excellent" title="Passed all checks"><strong>100.0%</strong><span>9/9 checks</span></td><td class="score good" title="capability check"><strong>90.0%</strong><span>9/10 checks</span></td><td class="score good" title="no public POST permission"><strong>91.7%</strong><span>11/12 checks</span></td><td class="score warn" title="admin guard; ten percent math"><strong>75.0%</strong><span>6/8 checks</span></td><td class="score warn" title="block registered from metadata; block name"><strong>83.3%</strong><span>10/12 checks</span></td></tr><tr><th>Qwen3.6 35B A3B Q4</th><td class="score excellent" title="Passed all checks"><strong>100.0%</strong><span>9/9 checks</span></td><td class="score excellent" title="Passed all checks"><strong>100.0%</strong><span>10/10 checks</span></td><td class="score excellent" title="Passed all checks"><strong>100.0%</strong><span>12/12 checks</span></td><td class="score bad" title="woocommerce price filter; admin guard; ten percent math"><strong>62.5%</strong><span>5/8 checks</span></td><td class="score bad" title="query latest posts; reset post data; escaped title; escaped permalink; block api version"><strong>58.3%</strong><span>7/12 checks</span></td></tr></tbody>
+      </table>
+    </section>
+
+    <section id="runtime">
+      <h2>Runtime</h2>
+      <table>
+        <thead><tr><th>Model</th><th>Total Runtime</th><th>Nonzero Agent Exits</th><th>Tasks</th></tr></thead>
+        <tbody><tr><td>Gemma 4 26B A4B Q6</td><td>11m 51s</td><td>1</td><td>5</td></tr>
+<tr><td>Gemma 4 31B Q6</td><td>4m 02s</td><td>1</td><td>5</td></tr>
+<tr><td>Qwen3.6 27B Q6</td><td>2m 53s</td><td>0</td><td>5</td></tr>
+<tr><td>Qwen3 Coder Next Q4</td><td>3m 34s</td><td>0</td><td>5</td></tr>
+<tr><td>Qwen3.6 35B A3B Q4</td><td>5m 57s</td><td>0</td><td>5</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="grid" id="notes">
+      
+        <article class="model-note">
+          <h3>Gemma 4 26B A4B Q6</h3>
+          <p><strong>96.7%</strong> average, 11m 51s total runtime.</p>
+          <ul><li>Highest automated score, but slowest total runtime.</li><li>REST output used a suspicious WP_REST_SUCCESS_CODE constant that would need runtime verification.</li></ul>
+        </article>
+        
+
+        <article class="model-note">
+          <h3>Gemma 4 31B Q6</h3>
+          <p><strong>94.4%</strong> average, 4m 02s total runtime.</p>
+          <ul><li>Strong all-around score with much better runtime than Gemma 26B.</li><li>One agent task exited nonzero despite producing scorable code, so reliability needs review.</li></ul>
+        </article>
+        
+
+        <article class="model-note">
+          <h3>Qwen3.6 27B Q6</h3>
+          <p><strong>92.5%</strong> average, 2m 53s total runtime.</p>
+          <ul><li>Best speed/quality balance in this run.</li><li>REST route structure needs manual review despite a high regex score.</li></ul>
+        </article>
+        
+
+        <article class="model-note">
+          <h3>Qwen3 Coder Next Q4</h3>
+          <p><strong>88.0%</strong> average, 3m 34s total runtime.</p>
+          <ul><li>Clean exits and good basic WP output.</li><li>Did not dominate the WP tasks despite being the coding-specialist candidate.</li></ul>
+        </article>
+        
+
+        <article class="model-note">
+          <h3>Qwen3.6 35B A3B Q4</h3>
+          <p><strong>84.2%</strong> average, 5m 57s total runtime.</p>
+          <ul><li>Strong on shortcode/settings/REST, weak on WooCommerce and dynamic block details.</li><li>Slower than Qwen3.6 27B Q6 while scoring lower on this task suite.</li></ul>
+        </article>
+        
+    </section>
+
+    <section class="verdict" id="answer">
+      <div class="panel">
+        <h2>Answer</h2>
+        <p class="callout">Local AI is good enough for useful first-draft WordPress plugin work, but not good enough to ship unsupervised.</p>
+        <p class="lead">The models handled shortcode, settings, and basic REST/plugin structure well. The weak points were runtime-sensitive WordPress details: WooCommerce hooks, dynamic block registration, route signatures, and constants/API assumptions that regex checks cannot fully validate.</p>
+      </div>
+      <div class="panel">
+        <h2>Practical Winner</h2>
+        <p><strong>Qwen3.6 27B Q6</strong></p>
+        <p class="lead">92.5% average in 2m 53s. It gave the best speed/quality balance, even though Gemma scored higher on the automated rubric.</p>
+      </div>
+    </section>
+
+    <section class="panel" id="interpretation">
+      <h2>Interpretation</h2>
+      <p class="lead">Use these local models as WordPress coding assistants: fast drafts, scaffolding, security checklists, and refactors. Keep human review and runtime validation in the loop for production work. The automated score is a baseline, not proof that a plugin works inside a live WordPress install.</p>
+    </section>
+
+    <p class="footer">Run folder: <code>/home/ovidiu/personal/benchmarks/results/local-model-runs/20260505-135431</code></p>
+  </main>
+</body>
+</html>
